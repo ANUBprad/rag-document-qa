@@ -3,26 +3,34 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from rag.document_loader import load_documents_from_folder
-from rag.chunker import split_documents
 from rag.embeddings import get_embedding_model
-from rag.vector_store import create_vector_store
+from rag.retriever import load_vector_store, get_retriever
+from rag.qa_chain import create_qa_chain
 
-
-folder_path = "data/documents"
-
-# Load documents
-documents = load_documents_from_folder(folder_path)
-print("Documents Loaded:", len(documents))
-
-# Split documents
-chunks = split_documents(documents)
-print("Chunks Created:", len(chunks))
 
 # Load embedding model
 embeddings = get_embedding_model()
 
-# Create vector database
-vector_db = create_vector_store(chunks, embeddings)
+# Load vector database
+vector_db = load_vector_store(embeddings)
 
-print("Vector database created successfully!")
+# Create retriever
+retriever = get_retriever(vector_db)
+
+# Create QA system
+qa_chain = create_qa_chain(retriever)
+
+
+print("RAG system ready! Ask questions.\n")
+
+while True:
+
+    query = input("Question: ")
+
+    if query.lower() == "exit":
+        break
+
+    answer = qa_chain.invoke(query)
+
+    print("\nAnswer:", answer)
+    print("\n")
