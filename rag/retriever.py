@@ -18,7 +18,11 @@ def load_vector_store(embeddings):
 def get_retriever(vector_db):
 
     retriever = vector_db.as_retriever(
-        search_kwargs={"k": 3}
+        search_type="mmr",
+        search_kwargs={
+            "k": 6,
+            "fetch_k": 20
+        }
     )
 
     return retriever

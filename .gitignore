@@ -18,3 +18,5 @@ vector_db/
 
 # Notebook checkpoints
 .ipynb_checkpoints/
+
+.env
