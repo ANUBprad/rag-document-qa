@@ -1,24 +1,28 @@
-from groq import Groq
-from dotenv import load_dotenv
-import os
-from rag.prompts import get_prompt
-load_dotenv()
+from rag.llm import client
+from rag.agent import agent_handler
+from rag.suggestions import generate_suggestions
 
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 def create_qa_chain(retriever):
-    def ask(query, mode, doc_type):
 
-        docs = retriever.get_relevant_documents(query)
+    def ask(query, doc_type):
+
+        prompt, docs, intent = agent_handler(query, retriever, doc_type)
+
         context = "\n\n".join([d.page_content for d in docs])
-
-        prompt = get_prompt(mode, context, query, doc_type)
 
         response = client.chat.completions.create(
             model="llama-3.1-8b-instant",
-            messages=[{"role": "user", "content": prompt}],
+            messages=[
+                {"role": "user", "content": prompt}
+            ],
             temperature=0.3
         )
 
-        return response.choices[0].message.content, docs
+        answer = response.choices[0].message.content.strip()
+
+        suggestions = generate_suggestions(context, query)
+
+        return answer, suggestions, intent
+
     return ask

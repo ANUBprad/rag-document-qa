@@ -1,34 +1,36 @@
-from groq import Groq
-from dotenv import load_dotenv
-import os
-load_dotenv()
+from rag.llm import client
 
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+def classify_document(docs):
 
-def classify_document(text):
+    text = "\n".join([doc.page_content for doc in docs[:3]])
 
     prompt = f"""
-Classify the following document into one of these categories:
+Classify this document:
 
-- resume
-- research_paper
-- legal
-- medical
-- financial
-- academic_notes
-- business_report
-- general
+resume
+medical
+legal
+research
+general
 
 Document:
-{text[:2000]}
+{text[:1500]}
 
-Only return the category name.
+Return one word only.
 """
 
     response = client.chat.completions.create(
         model="llama-3.1-8b-instant",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0
+        messages=[
+            {"role": "user", "content": prompt}
+        ]
     )
 
-    return response.choices[0].message.content.strip()
+    doc_type = response.choices[0].message.content.strip().lower()
+
+    allowed = ["resume", "medical", "legal", "research", "general"]
+
+    if doc_type not in allowed:
+        return "general"
+
+    return doc_type
